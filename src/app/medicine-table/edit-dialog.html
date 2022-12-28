@@ -2,20 +2,25 @@
 <div mat-dialog-content class="main_container">
 
   <div>
+    <mat-error *ngIf="data.errors.name">{{data.errors.name[0] || ''}}</mat-error>
     <mat-form-field appearance="fill" class="mat">
       <mat-label>Название</mat-label>
-      <input matInput [(ngModel)]="data.selectedMedicine.name">
+      <input matInput [ngModel]="data.selectedMedicine.name">
     </mat-form-field>
+
   </div>
 
   <div>
+    <mat-error *ngIf="data.errors.model">{{data.errors.model[0]}}</mat-error>
     <mat-form-field appearance="fill">
       <mat-label>Производитель</mat-label>
       <input matInput [(ngModel)]="data.selectedMedicine.model">
     </mat-form-field>
+
   </div>
 
   <div>
+    <mat-error *ngIf="data.errors.type">{{data.errors.type[0]}}</mat-error>
     <mat-form-field appearance="fill">
       <mat-label>Тип</mat-label>
       <mat-select placeholder="Производитель" [(ngModel)]="data.selectedMedicine.type">
@@ -23,20 +28,23 @@
           {{ p[1] }}
         </mat-option>
       </mat-select>
+
     </mat-form-field>
+
   </div>
 
   <div>
+    <mat-error *ngIf="data.errors.price">{{data.errors.price[0]}}</mat-error>
     <mat-form-field appearance="fill">
       <mat-label>Цена</mat-label>
-      <input matInput [(ngModel)]="data.selectedMedicine.price">
+      <input matInput type="number" [(ngModel)]="data.selectedMedicine.price">
     </mat-form-field>
-  </div>
 
+  </div>
 
 
 </div>
 <div mat-dialog-actions>
   <button mat-button (click)="onNoClick()">Закрыть</button>
-  <button mat-button [mat-dialog-close]="data.selectedMedicine" cdkFocusInitial>Ok</button>
+  <button mat-button (click)="validate()">Ok</button>
 </div>

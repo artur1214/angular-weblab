@@ -32,6 +32,7 @@ export class UserService {
   login(values: IUserForm): Observable<JWTResponse> {
     return this.http.post<JWTResponse>(BASE_URL + 'token/', values)
   }
+
   vkLogin(values: string): Observable<JWTResponse> {
     return this.http.get<JWTResponse>(BASE_URL + 'vk_token?' + values)
   }
@@ -43,10 +44,12 @@ export class AuthInterceptor implements HttpInterceptor {
   constructor(private http: HttpClient, private router: Router) {
 
   }
-  redirectTo(uri:string){
-    this.router.navigateByUrl('/', {skipLocationChange: true}).then(()=>
+
+  redirectTo(uri: string) {
+    this.router.navigateByUrl('/', {skipLocationChange: true}).then(() =>
       this.router.navigate([uri]));
   }
+
   intercept(
     req: HttpRequest<any>,
     next: HttpHandler
@@ -61,23 +64,20 @@ export class AuthInterceptor implements HttpInterceptor {
         (event) => {
         },
         (err) => {
-          console.log(err)
           if (err instanceof HttpErrorResponse) {
-            console.log(1, err)
-            if (err.status == 401) {
-              if (err.url?.includes('refresh') || !localStorage.getItem('JWT')) {
-                this.router.navigateByUrl('login')
-              } else {
-                this.http.post<{ access: string }>(BASE_URL + 'token/refresh/',
-                  {'refresh': localStorage.getItem('JWTRefresh') || 'IDK'}
-                ).subscribe((value) => {
-                  localStorage.setItem('JWT', value.access)
-                  window.location.reload()
-                })
-              }
+            if (err.status != 401) {
+              return;
             }
-
-
+            if (err.url?.includes('refresh') || !localStorage.getItem('JWT')) {
+              this.router.navigateByUrl('login')
+            } else {
+              this.http.post<{ access: string }>(BASE_URL + 'token/refresh/',
+                {'refresh': localStorage.getItem('JWTRefresh') || 'IDK'}
+              ).subscribe((value) => {
+                localStorage.setItem('JWT', value.access)
+                window.location.reload()
+              })
+            }
           }
         }
       )

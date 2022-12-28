@@ -1,10 +1,11 @@
 import {Component, Inject, Input, OnInit} from '@angular/core';
-import {IMedicine, IMedicineView} from "../models/medicine";
+import {IMedicine, IMedicineFormError, IMedicineView} from "../models/medicine";
 import {keys} from "ts-transformer-keys";
 import {MedicineService} from "../services/medicine.service";
 import {Router} from "@angular/router";
 import {MAT_DIALOG_DATA, MatDialog, MatDialogRef} from "@angular/material/dialog";
 import * as http from "http";
+import {FormControl, Validators} from "@angular/forms";
 
 @Component({
   selector: 'app-medicine-table',
@@ -42,10 +43,9 @@ export class MedicineTableComponent implements OnInit {
 
   changeRow(id: number) {
     console.log(id)
-    if (id !== -1){
+    if (id !== -1) {
       this.currentMedicine = this.medicines.filter(val => val.id == id)[0]
-    }
-    else{
+    } else {
       this.currentMedicine = {model: "", name: "", price: "0", type: this.medicineTypes[0]?.[0]}
     }
     this.openDialog()
@@ -57,35 +57,32 @@ export class MedicineTableComponent implements OnInit {
     })
   }
 
-  openDialog(): void {
+  openDialog(errors?: IMedicineFormError): void {
+    console.log('errr', errors)
     const dialogRef = this.dialog.open(MedicineEditDialog, {
       width: '480px',
       data: {
         types: this.medicineTypes,
-        selectedMedicine: Object.assign({}, this.currentMedicine)
+        selectedMedicine: Object.assign({}, this.currentMedicine),
+        errors: errors || {}
       },
     });
 
-    dialogRef.afterClosed().subscribe((result:IMedicine) => {
-      console.log('The dialog was closed');
-      console.log(result)
-      if(result.id === undefined) {
-        this.medicineService.create(result).subscribe((created: IMedicine)=>{
-          this.medicines = [...this.medicines, created]
+    dialogRef.afterClosed().subscribe((result: { value: IMedicine, created: boolean }) => {
+      console.log('res', result)
+      if (result.created) {
+        this.medicines = [...this.medicines, result.value]
+      } else {
+        this.medicines.map((val, index) => {
+          if (val.id != result.value.id) {
+            return;
+          }
+          this.medicines[index] = {...result.value}
         })
+        this.medicines = [...this.medicines]
       }
-      else {
-        this.medicineService.patch(result.id, result).subscribe((value: IMedicine) => {
-          this.medicines.map((val, index) => {
-            if (val.id != value.id) {
-              return;
-            }
-            this.medicines[index] = {...value}
-          })
-          this.medicines = [...this.medicines]
-        })
-      }
-    });
+
+    })
   }
 
   getMedicineTypeName(typeId: number) {
@@ -99,19 +96,64 @@ export class MedicineTableComponent implements OnInit {
   }
 }
 
+interface IDialogData {
+  selectedMedicine: IMedicine,
+  types: [number, string][],
+  errors: IMedicineFormError
+}
+
 @Component({
   selector: 'medicine-dialog',
   templateUrl: 'edit-dialog.html',
   styleUrls: ['edit-dialog.css']
 })
+
+
 export class MedicineEditDialog {
+  @Input() _data: IDialogData
+  @Input() show: boolean;
+
   constructor(
     public dialogRef: MatDialogRef<MedicineEditDialog>,
-    @Inject(MAT_DIALOG_DATA) public data: { selectedMedicine: IMedicine, types: [number, string][] },
+    @Inject(MAT_DIALOG_DATA) public data: IDialogData,
+    private medicineService: MedicineService
   ) {
+
   }
 
   onNoClick(): void {
     this.dialogRef.close();
+  }
+
+  ngOnInit(): void {
+    this._data = {...this.data}
+    this.show = true
+  }
+
+  validate() {
+    this.show = !this.show
+    console.log('validated')
+    const result = {...this.data.selectedMedicine}
+    console.log(result)
+    if (result.id === undefined) {
+      this.medicineService.create(result).subscribe({
+        next: (created: IMedicine) => {
+          this.dialogRef.close({value: created, created: true});
+        },
+        error: (err: { error: IMedicineFormError }) => {
+          this.dialogRef.componentInstance.data = {...this.data, errors:err.error }
+        }
+      })
+    } else {
+      this.medicineService.patch(result.id, result).subscribe({
+        next: (value: IMedicine) => {
+          this.dialogRef.close({value: value, created: false})
+        },
+        error: (err) => {
+          this.dialogRef.componentInstance.data = {...this.data, errors: err.error }
+        }
+      })
+    }
+
   }
 }

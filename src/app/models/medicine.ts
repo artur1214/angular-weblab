@@ -13,6 +13,11 @@ export interface IMedicine {
   model: string,
   price: string
 }
+
+export type IMedicineFormError = Partial<Record<keyof Required<IMedicine>, string[]>>
+
+
+
 export interface IMedicineView {
   id?: number,
   type: string,
