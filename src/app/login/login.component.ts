@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import {Component, OnInit} from '@angular/core';
 import {FormControl, FormGroup} from "@angular/forms";
 import {UserService} from "../services/user.service";
 import {Router} from "@angular/router";
@@ -18,31 +18,34 @@ export interface IUserForm {
 export class LoginComponent implements OnInit {
   userForm: FormGroup;
   formError: boolean = false
+
   constructor(private userService: UserService, private router: Router) {
     this._createForm()
   }
+
   _createForm() {
     this.userForm = new FormGroup({
       username: new FormControl<string>(''),
       password: new FormControl<string>('')
     })
   }
+
   ngOnInit(): void {
 
   }
+
   login(values: IUserForm) {
-    this.userService.login(values).subscribe(
-      val=>{
-        console.log(val)
+    this.userService.login(values).subscribe({
+      next: (val) => {
         localStorage.setItem('JWT', val.access)
         localStorage.setItem('JWTRefresh', val.refresh)
         this.router.navigateByUrl('')
       },
-      err=> {
+      error: (err) => {
         console.log(err)
         this.formError = true;
       }
-    )
+    })
   }
 
   onSubmit() {
