@@ -1,0 +1,24 @@
+<div style="margin-top: 30px">
+  <div class="center">
+    <h2 style="padding-right: 67px">Вход в систему</h2>
+    <form [formGroup]="userForm" (ngSubmit)="onSubmit()">
+      <div>
+        <mat-form-field>
+          <label>Login: </label>
+          <input matInput type="text" formControlName="username">
+        </mat-form-field>
+      </div>
+      <mat-form-field>
+        <label>Password: </label>
+        <input matInput type="password" formControlName="password">
+      </mat-form-field>
+      <div *ngIf="formError" style="color: firebrick">
+        Неверный логин или пароль
+      </div>
+      <div>
+        <button mat-button type="submit">Войти</button>
+        <button mat-button (click)="vkLogin()">Войти через ВК</button>
+      </div>
+    </form>
+  </div>
+</div>
